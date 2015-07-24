@@ -4,9 +4,9 @@ tosca_definitions_version: cloudify_dsl_1_0
 # Cloudify Blueprint which describes a xap cluster (single node)
 #
 imports:
-    - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
-    - http://www.getcloudify.org/spec/diamond-plugin/1.1/plugin.yaml
-    - http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml
+    - http://www.getcloudify.org/spec/cloudify/3.2/types.yaml
+    - http://www.getcloudify.org/spec/diamond-plugin/1.2/plugin.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.2/plugin.yaml
     - xap-blueprint-commons.yaml
 
 node_types:
@@ -24,6 +24,8 @@ node_templates:
                 security_group:
                     name: xap_management_security_group
                 rules:
+                    - remote_ip_prefix: 0.0.0.0/0
+                      port: 8080
                     - remote_ip_prefix: 0.0.0.0/0
                       port: 8099
                     - remote_ip_prefix: 0.0.0.0/0
@@ -80,8 +82,8 @@ node_templates:
                 deploy: 1
             properties:
               server:
-                  image: "d81ccdfe-7482-460e-a7ce-69ea29aa129b"
-                  flavor: "ba4e08fd-e4c5-4233-a906-f1bb31cb659d"
+                  image: "564be9dd-5a06-4a26-ba50-9453f972e483"
+                  flavor: "101"
                   security_groups: ['xap_management_security_group']
             relationships:
                 - target: floatingip
@@ -98,8 +100,8 @@ node_templates:
                 deploy: 1
             properties:
               server:
-                  image: "d81ccdfe-7482-460e-a7ce-69ea29aa129b"
-                  flavor: "ba4e08fd-e4c5-4233-a906-f1bb31cb659d"
+                  image: "564be9dd-5a06-4a26-ba50-9453f972e483"
+                  flavor: "101"
                   security_groups: ['xap_container_security_group']
             relationships:
                 - target: xap_container_security_group

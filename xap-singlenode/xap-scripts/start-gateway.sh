@@ -6,6 +6,7 @@ zones=$(ctx node properties zones)
 GSC_JAVA_OPTIONS=$(ctx node properties GSC_JAVA_OPTIONS)
 lrmi_comm_min_port=$(ctx node properties lrmi_comm_min_port)
 lrmi_comm_max_port=$(ctx node properties lrmi_comm_max_port)
+disco_port=$(ctx node properties disco_port)
 
 ctx download-resource xap-scripts/startgsc.groovy '@{"target_path": "/tmp/startgsc.groovy"}'
 
@@ -50,7 +51,7 @@ else
 fi
 export EXT_JAVA_OPTIONS="-Dcom.gs.multicast.enabled=false -Dcom.gs.transport_protocol.lrmi.network-mapping-file=/tmp/network_mapping.config -Dcom.gs.transport_protocol.lrmi.network-mapper=org.openspaces.repl.natmapper.ReplNatMapper"
 export EXT_JAVA_OPTIONS="${EXT_JAVA_OPTIONS} -Dcom.gs.zones=${ZONES}"
-#export GSC_JAVA_OPTIONS="$GSC_JAVA_OPTIONS -Dcom.gs.transport_protocol.lrmi.bind-port=${commport}"
+export GSC_JAVA_OPTIONS="$GSC_JAVA_OPTIONS -Dcom.gs.transport_protocol.lrmi.bind-port=${disco_port}"
 
 
 GROOVY=$XAPDIR/tools/groovy/bin/groovy

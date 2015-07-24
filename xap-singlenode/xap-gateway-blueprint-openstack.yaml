@@ -4,9 +4,9 @@ tosca_definitions_version: cloudify_dsl_1_0
 # Cloudify Blueprint which describes a xap cluster (single node)
 #
 imports:
-    - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
-    - http://www.getcloudify.org/spec/diamond-plugin/1.1/plugin.yaml
-    - http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml
+    - http://www.getcloudify.org/spec/cloudify/3.2/types.yaml
+    - http://www.getcloudify.org/spec/diamond-plugin/1.2/plugin.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.2/plugin.yaml
     - xap-gateway-commons-inputs.yaml
     - xap-gateway-commons.yaml
 
@@ -29,12 +29,11 @@ node_templates:
                         - remote_ip_prefix: 0.0.0.0/0
                           port: 8080
                         - remote_ip_prefix: 0.0.0.0/0
+                          port: 8099
+                        - remote_ip_prefix: 0.0.0.0/0
                           port: 8888
                         - remote_ip_prefix: 0.0.0.0/0
                           port: 9099
-                        - remote_ip_prefix: 0.0.0.0/0
-                          port_range_min: 10000
-                          port_range_max: 10100
                         - remote_ip_prefix: 0.0.0.0/0
                           port_range_min: 7122
                           port_range_max: 7222
@@ -64,15 +63,6 @@ node_templates:
                 #use_external_resource: True
                 rules:
                         - remote_ip_prefix: 0.0.0.0/0
-                          port: 8080
-                        - remote_ip_prefix: 0.0.0.0/0
-                          port: 8888
-                        - remote_ip_prefix: 0.0.0.0/0
-                          port: 9099
-                        - remote_ip_prefix: 0.0.0.0/0
-                          port_range_min: 10000
-                          port_range_max: 10100
-                        - remote_ip_prefix: 0.0.0.0/0
                           port_range_min: 7122
                           port_range_max: 7222
                         - direction: egress
@@ -100,12 +90,6 @@ node_templates:
                 #resource_id: xap_gateway_security_group
                 #use_external_resource: True
                 rules:
-                        - remote_ip_prefix: 0.0.0.0/0
-                          port: 8080
-                        - remote_ip_prefix: 0.0.0.0/0
-                          port: 8888
-                        - remote_ip_prefix: 0.0.0.0/0
-                          port: 9099
                         - remote_ip_prefix: 0.0.0.0/0
                           port_range_min: 10000
                           port_range_max: 10100
@@ -135,8 +119,8 @@ node_templates:
                 deploy: 1
             properties:
               server:
-                  image: "d81ccdfe-7482-460e-a7ce-69ea29aa129b"
-                  flavor: "ba4e08fd-e4c5-4233-a906-f1bb31cb659d"
+                  image: "564be9dd-5a06-4a26-ba50-9453f972e483"
+                  flavor: "101"
 
             relationships:
                 - target: floatingip_management
@@ -147,9 +131,9 @@ node_templates:
         floatingip_management:
             type: cloudify.openstack.nodes.FloatingIP
         floatingip_datagrid:
-                    type: cloudify.openstack.nodes.FloatingIP
+            type: cloudify.openstack.nodes.FloatingIP
         floatingip_gateway:
-                    type: cloudify.openstack.nodes.FloatingIP
+            type: cloudify.openstack.nodes.FloatingIP
 
         xap_datagrid_vm:
             type: vm_host
@@ -157,8 +141,8 @@ node_templates:
                 deploy: 1
             properties:
               server:
-                  image: "d81ccdfe-7482-460e-a7ce-69ea29aa129b"
-                  flavor: "ba4e08fd-e4c5-4233-a906-f1bb31cb659d"
+                  image: "564be9dd-5a06-4a26-ba50-9453f972e483"
+                  flavor: "101"
             relationships:
                 - target: floatingip_datagrid
                   type: cloudify.openstack.server_connected_to_floating_ip
@@ -171,8 +155,8 @@ node_templates:
                 deploy: 1
             properties:
               server:
-                  image: "d81ccdfe-7482-460e-a7ce-69ea29aa129b"
-                  flavor: "ba4e08fd-e4c5-4233-a906-f1bb31cb659d"
+                  image: "564be9dd-5a06-4a26-ba50-9453f972e483"
+                  flavor: "101"
             relationships:
                 - target: floatingip_gateway
                   type: cloudify.openstack.server_connected_to_floating_ip
@@ -232,6 +216,7 @@ node_templates:
             properties:
                 gsc_cnt: { get_input: xap_gateway_gscs_count }
                 zones: { get_input: xap_gateway_zones }
+                disco_port: { get_input: xap_gateway_disco_port }
 
             relationships:
                 -   target: xap_gateway_vm

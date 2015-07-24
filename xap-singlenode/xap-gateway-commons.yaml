@@ -99,6 +99,9 @@ node_types:
             lrmi_comm_max_port:
                 type: integer
                 default: { get_input: lrmi_comm_max_port }
+            disco_port:
+                type: integer
+                default: { get_input: xap_gateway_disco_port }
     xap_datagrid_type:
         derived_from: xap_type
 
