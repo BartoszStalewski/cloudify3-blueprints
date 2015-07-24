@@ -1,3 +1,7 @@
+plugins:
+    xap_plugin:
+        executor: host_agent
+        source: xap-plugin
 
 node_types:
     xap_type:
@@ -104,15 +108,6 @@ node_types:
                 default: { get_input: xap_gateway_disco_port }
     xap_datagrid_type:
         derived_from: xap_type
-
-plugins:
-    xap_config_plugin:
-        executor: host_agent
-        source: xap-config-plugin
-
-    xap_plugin:
-        executor: host_agent
-        source: xap-plugin
 
 
 workflows:

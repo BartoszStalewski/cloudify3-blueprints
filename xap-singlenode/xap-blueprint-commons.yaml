@@ -1,8 +1,4 @@
 plugins:
-    xap_config_plugin:
-        executor: host_agent
-        source: xap-config-plugin
-
     xap_plugin:
         executor: host_agent
         source: xap-plugin
