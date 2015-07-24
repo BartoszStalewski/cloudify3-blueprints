@@ -39,3 +39,7 @@ inputs:
         description: Comma separated list of zones
         type: string
         default: "gatewayzone"
+    xap_gateway_disco_port:
+        description: Gateway discovery port
+        type: integer
+        default: 10000

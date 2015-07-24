@@ -4,8 +4,8 @@ tosca_definitions_version: cloudify_dsl_1_0
 # Cloudify Blueprint which describes a xap cluster (single node)
 #
 imports:
-    - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
-    - http://www.getcloudify.org/spec/diamond-plugin/1.1/plugin.yaml
+    - http://www.getcloudify.org/spec/cloudify/3.2/types.yaml
+    - http://www.getcloudify.org/spec/diamond-plugin/1.2/plugin.yaml
     - xap-blueprint-commons.yaml
 
 node_types:
@@ -41,17 +41,17 @@ node_templates:
          xap_management_vm:
             type: xap.monitoredServer
             properties:
-                ip: 127.0.0.1
+                ip: 10.10.1.10
                 cloudify_agent:
-                    key: /home/vagrant/.ssh/agent_key.pem
+                    key: /root/.ssh/id_rsa
                     user: vagrant
 
          xap_container_vm:
             type: xap.monitoredServer
             properties:
-                ip: 127.0.0.1
+                ip: 10.10.1.10
                 cloudify_agent:
-                    key: /home/vagrant/.ssh/agent_key.pem
+                    key: /root/.ssh/id_rsa
                     user: vagrant
 
          xap_management:
