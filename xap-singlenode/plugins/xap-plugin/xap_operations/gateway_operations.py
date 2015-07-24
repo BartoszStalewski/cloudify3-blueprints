@@ -1,15 +1,24 @@
+########
+# Copyright (c) 2014 GigaSpaces Technologies Ltd. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# * See the License for the specific language governing permissions and
+
+# * limitations under the License.
 import json
-from cloudify.decorators import operation
+
+import commons
+
 from cloudify import ctx
-import subprocess
-import os
-import commands
-
-
-def get_ip_from_interface_name(interface_name):
-    intf_ip = commands.getoutput("ip address show dev " + interface_name).split()
-    intf_ip = intf_ip[intf_ip.index('inet') + 1].split('/')[0]
-    return intf_ip
+from cloudify.decorators import operation
 
 
 def list_to_str(lst):
@@ -25,12 +34,11 @@ def deploy_gateway_space(**kwargs):
     targets = kwargs['gateway_targets']
     script_path = ctx.download_resource(script)
     ctx.download_resource("xap-scripts/space-pu.xml", "/tmp/space-pu.xml")
-    xapdir = "".join([line.strip() for line in open('/tmp/gsdir')])
-    locators = ",".join([line.strip() for line in open('/tmp/locators')])
 
-    ip = get_ip_from_interface_name(ctx.node.properties['interfacename'])
+    locators = commons.read_locators()
+    ip = commons.get_ip_from_interface_name(ctx.node.properties['interfacename'])
     space_deployment_command = [
-        xapdir + "/tools/groovy/bin/groovy",
+        commons.get_groovy_path(),
         "-Dspacename=" + spacename,
         "-Dzones=" + spacezones,
         "-Dtargets=" + list_to_str(targets),
@@ -39,13 +47,8 @@ def deploy_gateway_space(**kwargs):
         "-Djava.rmi.server.hostname=" + ip,
         script_path
     ]
-    my_env = os.environ.copy()
-    my_env['LOOKUPLOCATORS'] = locators
 
-    my_env['NIC_ADDR'] = ip
-    ctx.logger.info("Executing: %s", space_deployment_command)
-    output = subprocess.check_output(space_deployment_command)
-    ctx.logger.info("Finished executing, output: %s", output)
+    commons.run_command(space_deployment_command)
 
 
 @operation
@@ -61,16 +64,15 @@ def deploy_gateway_pu(**kwargs):
     natmappings = kwargs['gateway_natmappings']
     script_path = ctx.download_resource(script)
     ctx.download_resource("xap-scripts/gateway-pu.xml", "/tmp/gateway-pu.xml")
-    xapdir = "".join([line.strip() for line in open('/tmp/gsdir')])
-    locators = ",".join([line.strip() for line in open('/tmp/locators')])
+    locators = commons.read_locators()
 
-    ip = get_ip_from_interface_name(ctx.node.properties['interfacename'])
+    ip = commons.get_ip_from_interface_name(ctx.node.properties['interfacename'])
     mylocators = {'gwname': gwname, 'address': ip, 'discoport': kwargs['gateway_discoport'],
                   'commport': kwargs['gateway_commport']}
     lookups.append(mylocators)
 
     gateway_deployment_command = [
-        xapdir + "/tools/groovy/bin/groovy",
+        commons.get_groovy_path(),
         "-Dpuname=" + puname,
         "-Dspacename=" + spacename,
         "-Dzones=" + gatewayzones,
@@ -85,12 +87,7 @@ def deploy_gateway_pu(**kwargs):
         script_path
     ]
 
-    my_env = os.environ.copy()
-    my_env['LOOKUPLOCATORS'] = locators
-    my_env['NIC_ADDR'] = ip
-    ctx.logger.info("Executing: %s", gateway_deployment_command)
-    output = subprocess.check_output(gateway_deployment_command, env=my_env)
-    ctx.logger.info("Finished executing, output: %s", output)
+    commons.run_command(gateway_deployment_command, ip, locators)
 
 
 @operation
@@ -98,11 +95,9 @@ def deploy_rest(**kwargs):
     spacename = kwargs['space_name']
     port = kwargs['rest_port']
     zones = kwargs['rest_zones']
-    xapdir = "".join([line.strip() for line in open('/tmp/gsdir')])
 
-    ip = get_ip_from_interface_name(ctx.node.properties['interfacename'])
     rest_deployment_command = [
-        xapdir + "/bin/gs.sh",
+        commons.get_gs_script_path(),
         "deploy-rest",
         "-spacename " + spacename,
         "-port " + str(port)
@@ -110,10 +105,4 @@ def deploy_rest(**kwargs):
     if len(zones) > 0:
         rest_deployment_command.append("-zones " + zones)
 
-    my_env = os.environ.copy()
-    locators = ",".join([line.strip() for line in open('/tmp/locators')])
-    my_env['LOOKUPLOCATORS'] = locators
-    my_env['NIC_ADDR'] = ip
-    ctx.logger.info("Executing: %s", rest_deployment_command)
-    output = subprocess.check_output(rest_deployment_command, env=my_env)
-    ctx.logger.info("Finished executing, output: %s", output)
+    commons.run_command(rest_deployment_command)

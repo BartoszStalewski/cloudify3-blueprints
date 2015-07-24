@@ -13,20 +13,17 @@
 # * See the License for the specific language governing permissions and
 
 # * limitations under the License.
-import commands
-from cloudify.decorators import operation
-import subprocess
-import urllib
 import os
+import urllib
 
+import commons
 
-def get_ip_from_interface_name(interface_name):
-    intf_ip = commands.getoutput("ip address show dev " + interface_name).split()
-    intf_ip = intf_ip[intf_ip.index('inet') + 1].split('/')[0]
-    return intf_ip
+from cloudify import ctx
+from cloudify.decorators import operation
+
 
 @operation
-def deploy_grid(ctx, **kwargs):
+def deploy_grid(**kwargs):
     grid_name = kwargs["grid_name"]
     schema = kwargs["schema"]
     partitions = str(kwargs["partitions"])
@@ -34,62 +31,40 @@ def deploy_grid(ctx, **kwargs):
     max_per_vm = str(kwargs["max_per_vm"])
     max_per_machine = str(kwargs["max_per_machine"])
 
-    xapdir = "".join([line.strip() for line in open('/tmp/gsdir')])
-
-    ip = get_ip_from_interface_name(ctx.node.properties['interfacename'])
     deployment_command = [
-        xapdir + "/bin/gs.sh",
+        commons.get_gs_script_path(),
         "deploy-space",
         "-cluster",
-        "schema="+schema+" total_members="+partitions+","+backups,
-        "-max-instances-per-vm "+max_per_vm,
-        "-max-instances-per-machine "+max_per_machine,
+        "schema=" + schema + " total_members=" + partitions + "," + backups,
+        "-max-instances-per-vm " + max_per_vm,
+        "-max-instances-per-machine " + max_per_machine,
         grid_name
     ]
 
-    my_env = os.environ.copy()
-    locators = ",".join([line.strip() for line in open('/tmp/locators')])
-    my_env['LOOKUPLOCATORS'] = locators
-    my_env['NIC_ADDR'] = ip
-    ctx.logger.info("Executing: %s", deployment_command)
-    output = subprocess.check_output(deployment_command, env=my_env)
-    ctx.logger.info("Finished executing, output: %s", output)
+    commons.run_command(deployment_command, ctx)
 
 
 @operation
-def undeploy_grid(ctx, **kwargs):
+def undeploy_grid(**kwargs):
     grid_name = kwargs["grid_name"]
 
-    xapdir = "".join([line.strip() for line in open('/tmp/gsdir')])
-
-    ip = get_ip_from_interface_name(ctx.node.properties['interfacename'])
     deployment_command = [
-        xapdir + "/bin/gs.sh",
+        commons.get_gs_script_path(),
         "undeploy",
         grid_name
     ]
 
-    my_env = os.environ.copy()
-    locators = ",".join([line.strip() for line in open('/tmp/locators')])
-    my_env['LOOKUPLOCATORS'] = locators
-    my_env['NIC_ADDR'] = ip
-    ctx.logger.info("Executing: %s", deployment_command)
-    output = subprocess.check_output(deployment_command, env=my_env)
-    ctx.logger.info("Finished executing, output: %s", output)
+    commons.run_command(deployment_command, ctx)
 
 
 @operation
-def deploy_pu(ctx, **kwargs):
+def deploy_pu(**kwargs):
     override_pu_name = kwargs["override_pu_name"]
     schema = kwargs["schema"]
     partitions = str(kwargs["partitions"])
     backups = str(kwargs["backups"])
     max_per_vm = str(kwargs["max_per_vm"])
     max_per_machine = str(kwargs["max_per_machine"])
-
-    xapdir = "".join([line.strip() for line in open('/tmp/gsdir')])
-
-    ip = get_ip_from_interface_name(ctx.node.properties['interfacename'])
 
     tmp_pus = '/tmp/pus'
     if not os.path.exists(tmp_pus):
@@ -104,21 +79,14 @@ def deploy_pu(ctx, **kwargs):
         pu_name = jar_name.split(".jar")[0]
 
     deployment_command = [
-        xapdir + "/bin/gs.sh",
+        commons.get_gs_script_path(),
         "deploy",
         "-cluster",
-        "schema="+schema+" total_members="+partitions+","+backups,
-        "-max-instances-per-vm "+max_per_vm,
-        "-max-instances-per-machine "+max_per_machine,
-        "-override-name "+pu_name,
+        "schema=" + schema + " total_members=" + partitions + "," + backups,
+        "-max-instances-per-vm " + max_per_vm,
+        "-max-instances-per-machine " + max_per_machine,
+        "-override-name " + pu_name,
         pu_location
     ]
 
-    my_env = os.environ.copy()
-    locators = ",".join([line.strip() for line in open('/tmp/locators')])
-    my_env['LOOKUPLOCATORS'] = locators
-    my_env['NIC_ADDR'] = ip
-    ctx.logger.info("Executing: %s", deployment_command)
-    output = subprocess.check_output(deployment_command, env=my_env)
-    ctx.logger.info("Finished executing, output: %s", output)
-
+    commons.run_command(deployment_command, ctx)
