@@ -14,6 +14,8 @@
 # * limitations under the License.
 __author__ = 'yohana'
 
+import commons
+
 from cloudify.decorators import workflow
 from cloudify.workflows import ctx
 from cloudify.workflows import parameters as p
@@ -21,52 +23,43 @@ from cloudify.workflows import parameters as p
 
 @workflow
 def deploy_grid(**kwargs):
-    instance = None
-    for node in ctx.nodes:
-        if "xap_management" == node.id:
-            for i in node.instances:
-                instance = i
-                break
-            break
+    instance = commons.get_instance_of_type('xap_management')
 
-    ctx.logger.info("executing instance {}".format(instance))
+    ctx.logger.info('executing instance {}'.format(instance))
 
-    instance.execute_operation("admin.commands.deploy_grid",
-                               kwargs={'grid_name': p.grid_name, 'schema': p.schema, 'partitions': p.partitions,
-                                       'backups': p.backups, 'max_per_vm': p.max_per_vm,
-                                       'max_per_machine': p.max_per_machine})
+    operation_arguments = {
+        'grid_name': p.grid_name,
+        'schema': p.schema,
+        'partitions': p.partitions,
+        'backups': p.backups,
+        'max_per_vm': p.max_per_vm,
+        'max_per_machine': p.max_per_machine
+    }
+    instance.execute_operation('admin.commands.deploy_grid', kwargs=operation_arguments)
 
 
 @workflow
 def deploy_pu(**kwargs):
-    instance = None
-    for node in ctx.nodes:
-        if "xap_management" == node.id:
-            for i in node.instances:
-                instance = i
-                break
-            break
+    instance = commons.get_instance_of_type('xap_management')
 
     ctx.logger.info("executing instance {}".format(instance))
 
-    instance.execute_operation("admin.commands.deploy_pu",
-                               kwargs={'pu_url': p.pu_url, 'override_pu_name': p.override_pu_name, 'schema': p.schema,
-                                       'partitions': p.partitions, 'backups': p.backups, 'max_per_vm': p.max_per_vm,
-                                       'max_per_machine': p.max_per_machine})
+    operation_arguments = {
+        'pu_url': p.pu_url,
+        'override_pu_name': p.override_pu_name,
+        'schema': p.schema,
+        'partitions': p.partitions,
+        'backups': p.backups,
+        'max_per_vm': p.max_per_vm,
+        'max_per_machine': p.max_per_machine
+    }
+    instance.execute_operation('admin.commands.deploy_pu', kwargs=operation_arguments)
 
 
 @workflow
 def undeploy_grid(**kwargs):
-    instance = None
-    for node in ctx.nodes:
-        if "xap_management" == node.id:
-            for i in node.instances:
-                instance = i
-                break
-            break
+    instance = commons.get_instance_of_type('xap_management')
 
-    ctx.logger.info("executing instance {}".format(instance))
+    ctx.logger.info('executing instance {}'.format(instance))
 
-    instance.execute_operation("admin.commands.undeploy_grid", kwargs={'grid_name': p.grid_name})
-
-
+    instance.execute_operation('admin.commands.undeploy_grid', kwargs={'grid_name': p.grid_name})

@@ -14,63 +14,62 @@
 # * limitations under the License.
 import commands
 
+import commons
+
 from cloudify.decorators import workflow
 from cloudify.workflows import ctx
-
-
-def get_ip_from_interfacename(interfacename):
-    intf_ip = commands.getoutput("ip address show dev " + interfacename).split()
-    intf_ip = intf_ip[intf_ip.index('inet') + 1].split('/')[0]
-    return intf_ip
 
 
 @workflow
 def start_gateway(**kwargs):
     graph = ctx.graph_mode()
-    management_instance = None
-    gateway_instance = None
-    for node in ctx.nodes:
-        if "xap_management" == node.id:
-            for i in node.instances:
-                management_instance = i
-                break
-        if "xap_gateway" == node.id:
-            for i in node.instances:
-                gateway_instance = i
-                break
-        if management_instance is not None and gateway_instance is not None:
-            break
+    management_instance = commons.get_instance_of_type('xap_management')
+    gateway_instance = commons.get_instance_of_type('xap_gateway')
 
     sequence = graph.sequence()
     ctx.logger.info("executing instance {}".format(management_instance))
 
-    lookups = kwargs['gateway_lookups']
+    deploy_gateway_space_arguments = {
+        'space_name': kwargs['space_name'],
+        'space_zones': kwargs['space_zones'],
+        'gateway_name': kwargs['gateway_name'],
+        'gateway_targets': kwargs['gateway_targets']
+    }
+    deploy_gateway_pu_arguments = {
+        'space_name': kwargs['space_name'],
+        'gateway_zones': kwargs['gateway_pu_zones'],
+        'gateway_name': kwargs['gateway_name'],
+        'gateway_discoport': kwargs['gateway_discoport'],
+        'gateway_commport': kwargs['gateway_commport'],
+        'gateway_targets': kwargs['gateway_targets'],
+        'gateway_sources': kwargs['gateway_sources'],
+        'gateway_lookups': kwargs['gateway_lookups'],
+        'gateway_natmappings': kwargs['gateway_natmappings']
+    }
+    deploy_rest_arguments = {
+        'space_name': kwargs['space_name'],
+        'rest_zones': kwargs['rest_zones'],
+        'rest_port': kwargs['rest_port']
+    }
 
     sequence.add(
         management_instance.send_event('Deploying space'),
-        management_instance.execute_operation("admin.commands.deploy_gateway_space",
-                                              kwargs={'space_name': kwargs['space_name'],
-                                                      'space_zones': kwargs['space_zones'],
-                                                      'gateway_name': kwargs['gateway_name'],
-                                                      'gateway_targets': kwargs['gateway_targets']}),
+        management_instance.execute_operation('admin.commands.deploy_gateway_space',
+                                              kwargs=deploy_gateway_space_arguments),
         gateway_instance.send_event('Deploying gateway'),
-        gateway_instance.execute_operation("admin.commands.deploy_gateway_pu",
-                                              kwargs={'space_name': kwargs['space_name'],
-                                                      'gateway_zones': kwargs['gateway_pu_zones'],
-                                                      'gateway_name': kwargs['gateway_name'],
-                                                      'gateway_discoport': kwargs['gateway_discoport'],
-                                                      'gateway_commport': kwargs['gateway_commport'],
-                                                      'gateway_targets': kwargs['gateway_targets'],
-                                                      'gateway_sources': kwargs['gateway_sources'],
-                                                      'gateway_lookups': lookups,
-                                                      'gateway_natmappings': kwargs['gateway_natmappings']}),
+        gateway_instance.execute_operation('admin.commands.deploy_gateway_pu',
+                                           kwargs=deploy_gateway_pu_arguments),
         management_instance.send_event('Deploying rest service'),
-        management_instance.execute_operation("admin.commands.deploy_rest",
-                                              kwargs={'space_name': kwargs['space_name'],
-                                                      'rest_zones': kwargs['rest_zones'],
-                                                      'rest_port': kwargs['rest_port']}),
+        management_instance.execute_operation('admin.commands.deploy_rest',
+                                              kwargs=deploy_rest_arguments),
         management_instance.send_event('Done running workflow')
 
     )
 
     graph.execute()
+
+
+def get_ip_from_interfacename(interfacename):
+    intf_ip = commands.getoutput('ip address show dev ' + interfacename).split()
+    intf_ip = intf_ip[intf_ip.index('inet') + 1].split('/')[0]
+    return intf_ip
