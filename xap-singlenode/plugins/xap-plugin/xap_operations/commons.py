@@ -20,8 +20,7 @@ import subprocess
 from cloudify import ctx
 
 
-GSDIR = os.path.join(os.sep, 'tmp', 'gsdir')
-LOCATORS = os.path.join(os.sep, 'tmp', 'locators')
+TMPDIR = os.path.join(os.sep, 'tmp')
 
 
 def get_ip_from_interface_name(interface_name):
@@ -41,7 +40,8 @@ def run_command(command, ip=None, locators=None):
 
 
 def read_locators():
-    return ','.join([line.strip() for line in open(LOCATORS)])
+    locators = os.path.join(TMPDIR, 'locators')
+    return ','.join([line.strip() for line in open(locators)])
 
 
 def get_gs_script_path():
@@ -53,4 +53,5 @@ def get_groovy_path():
 
 
 def get_xap_dir():
-    return ''.join([line.strip() for line in open(GSDIR)])
+    gsdir = os.path.join(TMPDIR, 'gsdir')
+    return ''.join([line.strip() for line in open(gsdir)])
